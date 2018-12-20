@@ -1,0 +1,28 @@
+version: '2'
+
+volumes:
+  storage-temp:
+
+services:
+  adb:
+    image: sorccu/adb:latest
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+  storage-temp:
+    build: storage-temp/
+    restart: unless-stopped
+    volumes:
+      - storage-temp:/app/data
+  provider:
+    image: openstf/stf:latest
+    restart: unless-stopped
+    command: stf provider --name ${STATION_NAME} --connect-sub tcp://${PRIVATE_URI}:7250 --connect-push tcp://${PRIVATE_URI}:7270 --storage-url http://${PUBLIC_URI}/ --public-ip 190.210.239.17 --heartbeat-interval 10000 --screen-ws-url-pattern "wss://${PUBLIC_URI}/d/nuc/<%= serial %>/<%= publicPort %>/" --adb-host adb --min-port 7400 --max-port 7700
+    ports:
+      - 7400-7700:7400-7700
+    depends_on:
+      - storage-temp
+      - adb
+
+
